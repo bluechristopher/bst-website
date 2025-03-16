@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Search Tree Visualizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Search Tree Visualiser</h1>
+        
+        <div class="input-section">
+            <label for="input-sequence">Enter a sequence of numbers or letters (separated by commas):</label>
+            <input type="text" id="input-sequence" placeholder="e.g. 50,25,75,12,37,63,88 or A,B,C,D,E,F">
+            <p class="info-text">Values will be inserted into the BST in the order provided</p>
+            <button id="generate-btn" class="button">Generate BST</button>
+            <div id="error-message"></div>
+        </div>
+        
+        <div class="traversal-section">
+            <div class="traversal-box">
+                <h3>Pre-order Traversal</h3>
+                <div id="preorder-result" class="traversal-result">-</div>
+            </div>
+            <div class="traversal-box">
+                <h3>In-order Traversal</h3>
+                <div id="inorder-result" class="traversal-result">-</div>
+            </div>
+            <div class="traversal-box">
+                <h3>Post-order Traversal</h3>
+                <div id="postorder-result" class="traversal-result">-</div>
+            </div>
+        </div>
+        
+        <div class="visualization" id="svg-container"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
