@@ -392,7 +392,7 @@ function visualizeTree(bst) {
 	helpText.style.textAlign = 'center';
 	helpText.style.fontSize = '14px';
 	helpText.style.color = '#FF8C00';
-	helpText.textContent = 'Tip: Press and hold on a node to drag it.';
+	helpText.textContent = 'Tip: On your computer, click and hold on a node to drag it.';
 	buttonContainer.after(helpText);
 }
 
