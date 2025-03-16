@@ -9,6 +9,7 @@ class TreeNode {
 class BST {
 	constructor() {
 		this.root = null;
+		this.duplicates = []; // Store duplicate values
 	}
 	
 	insert(val) {
@@ -16,42 +17,51 @@ class BST {
 		
 		if (!this.root) {
 			this.root = newNode;
-			return;
+			return true;
 		}
 		
 		const insertNode = (node, newNode) => {
+			if (newNode.val === node.val) {
+				// Found duplicate
+				return false;
+			}
+			
 			if (typeof newNode.val === 'string') {
 				if (newNode.val < node.val) {
 					if (node.left === null) {
 						node.left = newNode;
+						return true;
 					} else {
-						insertNode(node.left, newNode);
+						return insertNode(node.left, newNode);
 					}
 				} else {
 					if (node.right === null) {
 						node.right = newNode;
+						return true;
 					} else {
-						insertNode(node.right, newNode);
+						return insertNode(node.right, newNode);
 					}
 				}
 			} else {
 				if (newNode.val < node.val) {
 					if (node.left === null) {
 						node.left = newNode;
+						return true;
 					} else {
-						insertNode(node.left, newNode);
+						return insertNode(node.left, newNode);
 					}
 				} else {
 					if (node.right === null) {
 						node.right = newNode;
+						return true;
 					} else {
-						insertNode(node.right, newNode);
+						return insertNode(node.right, newNode);
 					}
 				}
 			}
 		};
 		
-		insertNode(this.root, newNode);
+		return insertNode(this.root, newNode);
 	}
 	
 	preOrderTraversal(callback) {
@@ -206,21 +216,48 @@ function generateBST() {
 	errorElement.textContent = '';
 	
 	const bst = new BST();
+	const duplicates = [];
 	
 	const isNumeric = values.every(val => !isNaN(val) && val !== '');
 	
 	values.forEach(val => {
+		let valueToInsert;
+		
 		if (isNumeric) {
 			const numVal = parseFloat(val);
 			if (numVal > Number.MAX_SAFE_INTEGER || numVal < Number.MIN_SAFE_INTEGER) {
 				errorElement.textContent = 'Number values too large. Please use smaller numbers.';
 				return;
 			}
-			bst.insert(numVal);
+			valueToInsert = numVal;
 		} else {
-			bst.insert(val);
+			valueToInsert = val;
+		}
+		
+		// Attempt to insert and check if the insertion was successful
+		const inserted = bst.insert(valueToInsert);
+		if (!inserted) {
+			duplicates.push(valueToInsert);
 		}
 	});
+	
+	// Display warning for duplicates if any were found
+	if (duplicates.length > 0) {
+		const warningMessage = `Warning: Duplicate value(s) found and not added: ${duplicates.join(', ')}`;
+		
+		// Check if there's already an error message
+		if (errorElement.textContent) {
+			errorElement.textContent += '. ' + warningMessage;
+		} else {
+			errorElement.textContent = warningMessage;
+		}
+		
+		// Apply warning styling
+		errorElement.style.color = 'orange';
+	} else {
+		// Reset to default error color
+		errorElement.style.color = 'red';
+	}
 	
 	displayTraversals(bst);
 	visualizeTree(bst);
