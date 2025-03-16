@@ -296,29 +296,33 @@ function visualizeTree(bst) {
 	
 	svgContainer.innerHTML = optimizedSvg;
 	
-	if (!document.getElementById('download-svg-btn')) {
-		const buttonContainer = document.createElement('div');
-		buttonContainer.style.marginTop = '15px';
-		buttonContainer.style.display = 'flex';
-		buttonContainer.style.gap = '10px';
-		buttonContainer.style.justifyContent = 'center';
-		
-		const downloadButton = document.createElement('button');
-		downloadButton.id = 'download-svg-btn';
-		downloadButton.className = 'button';
-		downloadButton.textContent = 'Download SVG';
-		downloadButton.addEventListener('click', () => downloadSvg(optimizedSvg));
-		
-		const copyButton = document.createElement('button');
-		copyButton.id = 'copy-svg-btn';
-		copyButton.className = 'button';
-		copyButton.textContent = 'Copy to Clipboard';
-		copyButton.addEventListener('click', () => copySvgToClipboard(optimizedSvg));
-		
-		buttonContainer.appendChild(downloadButton);
-		buttonContainer.appendChild(copyButton);
-		svgContainer.after(buttonContainer);
+	const existingButtonContainer = document.getElementById('svg-button-container');
+	if (existingButtonContainer) {
+		existingButtonContainer.remove();
 	}
+	
+	const buttonContainer = document.createElement('div');
+	buttonContainer.id = 'svg-button-container';
+	buttonContainer.style.marginTop = '15px';
+	buttonContainer.style.display = 'flex';
+	buttonContainer.style.gap = '10px';
+	buttonContainer.style.justifyContent = 'center';
+	
+	const downloadButton = document.createElement('button');
+	downloadButton.id = 'download-svg-btn';
+	downloadButton.className = 'button';
+	downloadButton.textContent = 'Download SVG';
+	downloadButton.addEventListener('click', () => downloadSvg(optimizedSvg));
+	
+	const copyButton = document.createElement('button');
+	copyButton.id = 'copy-svg-btn';
+	copyButton.className = 'button';
+	copyButton.textContent = 'Copy to Clipboard';
+	copyButton.addEventListener('click', () => copySvgToClipboard(optimizedSvg));
+	
+	buttonContainer.appendChild(downloadButton);
+	buttonContainer.appendChild(copyButton);
+	svgContainer.after(buttonContainer);
 }
 
 function createOptimizedSvg(bst, coordinates) {
@@ -434,7 +438,7 @@ function copySvgToClipboard(svgContent) {
 			successMessage.style.marginTop = '5px';
 			successMessage.style.textAlign = 'center';
 			
-			const buttonContainer = document.getElementById('copy-svg-btn').parentElement;
+			const buttonContainer = document.getElementById('svg-button-container');
 			
 			const existingMessage = buttonContainer.querySelector('.copy-success');
 			if (existingMessage) {
@@ -457,42 +461,6 @@ function copySvgToClipboard(svgContent) {
 			const originalError = errorElement.textContent;
 			errorElement.textContent = 'Failed to copy SVG to clipboard. Your browser may not support this feature.';
 			
-			setTimeout(() => {
-				errorElement.textContent = originalError;
-			}, 3000);
-		});
-}50';
-			successMessage.style.marginTop = '5px';
-			successMessage.style.textAlign = 'center';
-			
-			// Find the button container and append the message
-			const buttonContainer = document.getElementById('copy-svg-btn').parentElement;
-			
-			// Remove any existing success message
-			const existingMessage = buttonContainer.querySelector('.copy-success');
-			if (existingMessage) {
-				buttonContainer.removeChild(existingMessage);
-			}
-			
-			successMessage.className = 'copy-success';
-			buttonContainer.appendChild(successMessage);
-			
-			// Remove the message after 3 seconds
-			setTimeout(() => {
-				if (successMessage.parentNode) {
-					successMessage.parentNode.removeChild(successMessage);
-				}
-			}, 3000);
-		})
-		.catch(err => {
-			console.error('Failed to copy SVG: ', err);
-			
-			// Show error message
-			const errorElement = document.getElementById('error-message');
-			const originalError = errorElement.textContent;
-			errorElement.textContent = 'Failed to copy SVG to clipboard. Your browser may not support this feature.';
-			
-			// Restore original error message after 3 seconds
 			setTimeout(() => {
 				errorElement.textContent = originalError;
 			}, 3000);
@@ -503,19 +471,5 @@ document.getElementById('generate-btn').addEventListener('click', generateBST);
 document.getElementById('input-sequence').addEventListener('keypress', function(e) {
 	if (e.key === 'Enter') {
 		generateBST();
-	}
-});
-
-// Remove any existing buttons when the page loads to avoid duplicates
-document.addEventListener('DOMContentLoaded', function() {
-	const existingDownloadBtn = document.getElementById('download-svg-btn');
-	const existingCopyBtn = document.getElementById('copy-svg-btn');
-	
-	if (existingDownloadBtn && existingDownloadBtn.parentNode) {
-		existingDownloadBtn.parentNode.remove();
-	}
-	
-	if (existingCopyBtn && existingCopyBtn.parentNode && existingCopyBtn.parentNode !== existingDownloadBtn.parentNode) {
-		existingCopyBtn.parentNode.remove();
 	}
 });
