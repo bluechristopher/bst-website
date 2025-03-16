@@ -424,18 +424,27 @@ function convertToPngAndDownload() {
 	
 	const serializer = new XMLSerializer();
 	const svgString = serializer.serializeToString(svgElement);
-	const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+	
+	const svgData = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+	
+	const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
 	const svgUrl = URL.createObjectURL(svgBlob);
 	
 	const img = new Image();
 	img.onload = function() {
 		const canvas = document.createElement('canvas');
-		canvas.width = svgElement.width.baseVal.value;
-		canvas.height = svgElement.height.baseVal.value;
+		const scale = 2;
+		canvas.width = svgElement.width.baseVal.value * scale;
+		canvas.height = svgElement.height.baseVal.value * scale;
 		
 		const ctx = canvas.getContext('2d');
 		ctx.fillStyle = 'white';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+		
+		ctx.scale(scale, scale);
 		ctx.drawImage(img, 0, 0);
 		
 		canvas.toBlob(function(blob) {
@@ -447,7 +456,7 @@ function convertToPngAndDownload() {
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-		}, 'image/png');
+		}, 'image/png', 1.0);
 	};
 	
 	img.onerror = function() {
@@ -467,18 +476,27 @@ function copyPngToClipboard() {
 	
 	const serializer = new XMLSerializer();
 	const svgString = serializer.serializeToString(svgElement);
-	const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+	
+	const svgData = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+	
+	const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
 	const svgUrl = URL.createObjectURL(svgBlob);
 	
 	const img = new Image();
 	img.onload = function() {
 		const canvas = document.createElement('canvas');
-		canvas.width = svgElement.width.baseVal.value;
-		canvas.height = svgElement.height.baseVal.value;
+		const scale = 2;
+		canvas.width = svgElement.width.baseVal.value * scale;
+		canvas.height = svgElement.height.baseVal.value * scale;
 		
 		const ctx = canvas.getContext('2d');
 		ctx.fillStyle = 'white';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+		
+		ctx.scale(scale, scale);
 		ctx.drawImage(img, 0, 0);
 		
 		canvas.toBlob(function(blob) {
@@ -486,7 +504,7 @@ function copyPngToClipboard() {
 				const item = new ClipboardItem({ 'image/png': blob });
 				navigator.clipboard.write([item]).then(
 					function() {
-						showMessage('PNG copied to clipboard!');
+						showMessage('High-quality PNG copied to clipboard!');
 					},
 					function(err) {
 						console.error('Could not copy image: ', err);
@@ -497,7 +515,7 @@ function copyPngToClipboard() {
 				console.error('Clipboard API error: ', err);
 				showMessage('Your browser does not support copying images to clipboard.', true);
 			}
-		}, 'image/png');
+		}, 'image/png', 1.0);
 	};
 	
 	img.onerror = function() {
