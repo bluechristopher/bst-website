@@ -401,7 +401,7 @@ function createOptimizedSvg(bst, coordinates) {
 		
 		svgContent += `
 			<circle cx="${x}" cy="${y}" r="${radius}" fill="white" stroke="black" stroke-width="2"/>
-			<text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Lexend, Arial, sans-serif" font-size="14">${sanitizedValue}</text>
+			<text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Roboto, Arial, sans-serif" font-size="16">${sanitizedValue}</text>
 		`;
 		
 		if (node.left) drawNodes(node.left);
