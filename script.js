@@ -135,55 +135,41 @@ class BST {
         }
         
         const levels = Object.keys(nodesByLevel).sort((a, b) => parseInt(a) - parseInt(b));
-        
-        for (let i = 1; i < levels.length; i++) {
-            const level = parseInt(levels[i]);
-            const nodesAtLevel = nodesByLevel[level];
-            
-            for (const node of nodesAtLevel) {
-                const parent = findParent(node, nodesByLevel[level - 1] || []);
-                if (!parent || !coordinates[parent.val]) continue;
-                
-                const parentCoords = coordinates[parent.val];
-                const baseOffset = 0.5 / Math.pow(1.6, level);
-                
-                if (node === parent.left) {
-                    coordinates[node.val] = { 
-                        x: parentCoords.x - baseOffset, 
-                        y: parentCoords.y + 70 
-                    };
-                } else {
-                    coordinates[node.val] = { 
-                        x: parentCoords.x + baseOffset, 
-                        y: parentCoords.y + 70 
-                    };
-                }
-            }
-        }
-        
         for (let i = 1; i < levels.length; i++) {
             const level = parseInt(levels[i]);
             const nodesAtLevel = nodesByLevel[level];
             
             const sortedNodes = [...nodesAtLevel].sort((a, b) => {
-                if (!coordinates[a.val] || !coordinates[b.val]) return 0;
-                return coordinates[a.val].x - coordinates[b.val].x;
+                const parentA = findParent(a, nodesByLevel[level - 1] || []);
+                const parentB = findParent(b, nodesByLevel[level - 1] || []);
+                if (!parentA || !parentB || !coordinates[parentA.val] || !coordinates[parentB.val]) return 0;
+                return coordinates[parentA.val].x - coordinates[parentB.val].x;
             });
             
-            const minDistance = 0.1;
+            let lastX = 0;
+            const minNodeSpacing = 0.1 / level;
             
-            for (let j = 1; j < sortedNodes.length; j++) {
-                const prevNode = sortedNodes[j-1];
-                const currNode = sortedNodes[j];
+            for (const node of sortedNodes) {
+                const parent = findParent(node, nodesByLevel[level - 1] || []);
+                if (!parent || !coordinates[parent.val]) continue;
                 
-                if (!coordinates[prevNode.val] || !coordinates[currNode.val]) continue;
+                const parentCoords = coordinates[parent.val];
+                const baseOffset = 0.25 / (level + 1);
                 
-                const prevX = coordinates[prevNode.val].x;
-                const currX = coordinates[currNode.val].x;
-                
-                if (currX - prevX < minDistance) {
-                    coordinates[currNode.val].x = prevX + minDistance;
+                let x = node === parent.left 
+                    ? parentCoords.x - baseOffset 
+                    : parentCoords.x + baseOffset;
+                    
+                if (lastX > 0 && x - lastX < minNodeSpacing) {
+                    x = lastX + minNodeSpacing;
                 }
+                
+                lastX = x;
+                
+                coordinates[node.val] = { 
+                    x: x, 
+                    y: parentCoords.y + 70 
+                };
             }
         }
         
@@ -212,8 +198,8 @@ function generateBST() {
         return;
     }
     
-    if (values.some(val => val.length > 3)) {
-        errorElement.textContent = 'Values are too long. Please limit each value to 3 characters or less.';
+    if (values.some(val => val.length > 20)) {
+        errorElement.textContent = 'Values are too long. Please limit each value to 20 characters or less.';
         return;
     }
     
