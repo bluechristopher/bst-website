@@ -9,7 +9,7 @@ class TreeNode {
 class BST {
 	constructor() {
 		this.root = null;
-		this.duplicates = []; // Store duplicate values
+		this.duplicates = []; 
 	}
 	
 	insert(val) {
@@ -22,7 +22,6 @@ class BST {
 		
 		const insertNode = (node, newNode) => {
 			if (newNode.val === node.val) {
-				// Found duplicate
 				return false;
 			}
 			
@@ -234,28 +233,23 @@ function generateBST() {
 			valueToInsert = val;
 		}
 		
-		// Attempt to insert and check if the insertion was successful
 		const inserted = bst.insert(valueToInsert);
 		if (!inserted) {
 			duplicates.push(valueToInsert);
 		}
 	});
 	
-	// Display warning for duplicates if any were found
 	if (duplicates.length > 0) {
 		const warningMessage = `Warning: Duplicate value(s) found and not added: ${duplicates.join(', ')}`;
 		
-		// Check if there's already an error message
 		if (errorElement.textContent) {
 			errorElement.textContent += '. ' + warningMessage;
 		} else {
 			errorElement.textContent = warningMessage;
 		}
 		
-		// Apply warning styling
 		errorElement.style.color = 'orange';
 	} else {
-		// Reset to default error color
 		errorElement.style.color = 'red';
 	}
 	
@@ -298,10 +292,74 @@ function visualizeTree(bst) {
 	
 	const coordinates = bst.getCoordinates();
 	
-	const svgWidth = 800;
-	const svgHeight = Math.max(treeHeight * 80 + 50, 200);
+	const optimizedSvg = createOptimizedSvg(bst, coordinates);
 	
-	let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}" style="background-color: white;">`;
+	svgContainer.innerHTML = optimizedSvg;
+	
+	if (!document.getElementById('download-svg-btn')) {
+		const buttonContainer = document.createElement('div');
+		buttonContainer.style.marginTop = '15px';
+		buttonContainer.style.display = 'flex';
+		buttonContainer.style.gap = '10px';
+		buttonContainer.style.justifyContent = 'center';
+		
+		const downloadButton = document.createElement('button');
+		downloadButton.id = 'download-svg-btn';
+		downloadButton.className = 'button';
+		downloadButton.textContent = 'Download SVG';
+		downloadButton.addEventListener('click', () => downloadSvg(optimizedSvg));
+		
+		const copyButton = document.createElement('button');
+		copyButton.id = 'copy-svg-btn';
+		copyButton.className = 'button';
+		copyButton.textContent = 'Copy to Clipboard';
+		copyButton.addEventListener('click', () => copySvgToClipboard(optimizedSvg));
+		
+		buttonContainer.appendChild(downloadButton);
+		buttonContainer.appendChild(copyButton);
+		svgContainer.after(buttonContainer);
+	}
+}
+
+function createOptimizedSvg(bst, coordinates) {
+	let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+	
+	function updateBounds(node) {
+		if (!node || !coordinates[node.val]) return;
+		
+		const coord = coordinates[node.val];
+		const x = coord.x * 800;
+		const y = coord.y;
+		const radius = 25;
+		
+		minX = Math.min(minX, x - radius);
+		maxX = Math.max(maxX, x + radius);
+		minY = Math.min(minY, y - radius);
+		maxY = Math.max(maxY, y + radius);
+		
+		if (node.left) updateBounds(node.left);
+		if (node.right) updateBounds(node.right);
+	}
+	
+	if (bst.root) updateBounds(bst.root);
+	
+	if (minX === Infinity) {
+		minX = 0;
+		maxX = 100;
+		minY = 0;
+		maxY = 100;
+	}
+	
+	const padding = 30;
+	minX = Math.max(0, minX - padding);
+	minY = Math.max(0, minY - padding);
+	maxX = maxX + padding;
+	maxY = maxY + padding;
+	
+	const width = maxX - minX;
+	const height = maxY - minY;
+	
+	let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${width} ${height}" width="${width}" height="${height}" style="background-color: white;">`;
 	
 	function drawConnections(node, parent = null) {
 		if (!node) return;
@@ -310,9 +368,9 @@ function visualizeTree(bst) {
 			const parentCoord = coordinates[parent.val];
 			const nodeCoord = coordinates[node.val];
 			
-			const x1 = parentCoord.x * svgWidth;
+			const x1 = parentCoord.x * 800;
 			const y1 = parentCoord.y;
-			const x2 = nodeCoord.x * svgWidth;
+			const x2 = nodeCoord.x * 800;
 			const y2 = nodeCoord.y;
 			
 			svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="1.5"/>`;
@@ -326,7 +384,7 @@ function visualizeTree(bst) {
 		if (!node || !coordinates[node.val]) return;
 		
 		const coord = coordinates[node.val];
-		const x = coord.x * svgWidth;
+		const x = coord.x * 800;
 		const y = coord.y;
 		const radius = 20;
 		
@@ -339,7 +397,7 @@ function visualizeTree(bst) {
 		
 		svgContent += `
 			<circle cx="${x}" cy="${y}" r="${radius}" fill="white" stroke="black" stroke-width="2"/>
-			<text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Arial" font-size="14">${sanitizedValue}</text>
+			<text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Lexend, Arial, sans-serif" font-size="14">${sanitizedValue}</text>
 		`;
 		
 		if (node.left) drawNodes(node.left);
@@ -350,12 +408,114 @@ function visualizeTree(bst) {
 	if (bst.root) drawNodes(bst.root);
 	
 	svgContent += '</svg>';
-	svgContainer.innerHTML = svgContent;
+	return svgContent;
+}
+
+function downloadSvg(svgContent) {
+	const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+	const url = URL.createObjectURL(blob);
+	
+	const downloadLink = document.createElement('a');
+	downloadLink.href = url;
+	downloadLink.download = 'binary_search_tree.svg';
+	document.body.appendChild(downloadLink);
+	downloadLink.click();
+	
+	document.body.removeChild(downloadLink);
+	URL.revokeObjectURL(url);
+}
+
+function copySvgToClipboard(svgContent) {
+	navigator.clipboard.writeText(svgContent)
+		.then(() => {
+			const successMessage = document.createElement('div');
+			successMessage.textContent = 'SVG copied to clipboard!';
+			successMessage.style.color = '#4CAF50';
+			successMessage.style.marginTop = '5px';
+			successMessage.style.textAlign = 'center';
+			
+			const buttonContainer = document.getElementById('copy-svg-btn').parentElement;
+			
+			const existingMessage = buttonContainer.querySelector('.copy-success');
+			if (existingMessage) {
+				buttonContainer.removeChild(existingMessage);
+			}
+			
+			successMessage.className = 'copy-success';
+			buttonContainer.appendChild(successMessage);
+			
+			setTimeout(() => {
+				if (successMessage.parentNode) {
+					successMessage.parentNode.removeChild(successMessage);
+				}
+			}, 3000);
+		})
+		.catch(err => {
+			console.error('Failed to copy SVG: ', err);
+			
+			const errorElement = document.getElementById('error-message');
+			const originalError = errorElement.textContent;
+			errorElement.textContent = 'Failed to copy SVG to clipboard. Your browser may not support this feature.';
+			
+			setTimeout(() => {
+				errorElement.textContent = originalError;
+			}, 3000);
+		});
+}50';
+			successMessage.style.marginTop = '5px';
+			successMessage.style.textAlign = 'center';
+			
+			// Find the button container and append the message
+			const buttonContainer = document.getElementById('copy-svg-btn').parentElement;
+			
+			// Remove any existing success message
+			const existingMessage = buttonContainer.querySelector('.copy-success');
+			if (existingMessage) {
+				buttonContainer.removeChild(existingMessage);
+			}
+			
+			successMessage.className = 'copy-success';
+			buttonContainer.appendChild(successMessage);
+			
+			// Remove the message after 3 seconds
+			setTimeout(() => {
+				if (successMessage.parentNode) {
+					successMessage.parentNode.removeChild(successMessage);
+				}
+			}, 3000);
+		})
+		.catch(err => {
+			console.error('Failed to copy SVG: ', err);
+			
+			// Show error message
+			const errorElement = document.getElementById('error-message');
+			const originalError = errorElement.textContent;
+			errorElement.textContent = 'Failed to copy SVG to clipboard. Your browser may not support this feature.';
+			
+			// Restore original error message after 3 seconds
+			setTimeout(() => {
+				errorElement.textContent = originalError;
+			}, 3000);
+		});
 }
 
 document.getElementById('generate-btn').addEventListener('click', generateBST);
 document.getElementById('input-sequence').addEventListener('keypress', function(e) {
 	if (e.key === 'Enter') {
 		generateBST();
+	}
+});
+
+// Remove any existing buttons when the page loads to avoid duplicates
+document.addEventListener('DOMContentLoaded', function() {
+	const existingDownloadBtn = document.getElementById('download-svg-btn');
+	const existingCopyBtn = document.getElementById('copy-svg-btn');
+	
+	if (existingDownloadBtn && existingDownloadBtn.parentNode) {
+		existingDownloadBtn.parentNode.remove();
+	}
+	
+	if (existingCopyBtn && existingCopyBtn.parentNode && existingCopyBtn.parentNode !== existingDownloadBtn.parentNode) {
+		existingCopyBtn.parentNode.remove();
 	}
 });
