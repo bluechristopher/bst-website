@@ -309,16 +309,16 @@ function visualizeTree(bst) {
 	buttonContainer.style.justifyContent = 'center';
 	
 	const downloadButton = document.createElement('button');
-	downloadButton.id = 'download-svg-btn';
+	downloadButton.id = 'download-png-btn';
 	downloadButton.className = 'button';
-	downloadButton.textContent = 'Download SVG';
-	downloadButton.addEventListener('click', () => downloadSvg(optimizedSvg));
+	downloadButton.textContent = 'Download PNG';
+	downloadButton.addEventListener('click', () => convertToPngAndDownload());
 	
 	const copyButton = document.createElement('button');
-	copyButton.id = 'copy-svg-btn';
+	copyButton.id = 'copy-png-btn';
 	copyButton.className = 'button';
-	copyButton.textContent = 'Copy to Clipboard';
-	copyButton.addEventListener('click', () => copySvgToClipboard(optimizedSvg));
+	copyButton.textContent = 'Copy PNG to Clipboard';
+	copyButton.addEventListener('click', () => copyPngToClipboard());
 	
 	buttonContainer.appendChild(downloadButton);
 	buttonContainer.appendChild(copyButton);
@@ -415,56 +415,132 @@ function createOptimizedSvg(bst, coordinates) {
 	return svgContent;
 }
 
-function downloadSvg(svgContent) {
-	const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-	const url = URL.createObjectURL(blob);
+function convertToPngAndDownload() {
+	const svgElement = document.querySelector('#svg-container svg');
+	if (!svgElement) {
+		showMessage('No SVG found to convert', true);
+		return;
+	}
 	
-	const downloadLink = document.createElement('a');
-	downloadLink.href = url;
-	downloadLink.download = 'binary_search_tree.svg';
-	document.body.appendChild(downloadLink);
-	downloadLink.click();
+	const serializer = new XMLSerializer();
+	const svgString = serializer.serializeToString(svgElement);
+	const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+	const svgUrl = URL.createObjectURL(svgBlob);
 	
-	document.body.removeChild(downloadLink);
-	URL.revokeObjectURL(url);
+	const img = new Image();
+	img.onload = function() {
+		const canvas = document.createElement('canvas');
+		canvas.width = svgElement.width.baseVal.value;
+		canvas.height = svgElement.height.baseVal.value;
+		
+		const ctx = canvas.getContext('2d');
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(img, 0, 0);
+		
+		canvas.toBlob(function(blob) {
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'binary_search_tree.png';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		}, 'image/png');
+	};
+	
+	img.onerror = function() {
+		showMessage('Error converting SVG to PNG', true);
+		URL.revokeObjectURL(svgUrl);
+	};
+	
+	img.src = svgUrl;
 }
 
-function copySvgToClipboard(svgContent) {
-	navigator.clipboard.writeText(svgContent)
-		.then(() => {
-			const successMessage = document.createElement('div');
-			successMessage.textContent = 'SVG copied to clipboard!';
-			successMessage.style.color = '#4CAF50';
-			successMessage.style.marginTop = '5px';
-			successMessage.style.textAlign = 'center';
-			
-			const buttonContainer = document.getElementById('svg-button-container');
-			
-			const existingMessage = buttonContainer.querySelector('.copy-success');
-			if (existingMessage) {
-				buttonContainer.removeChild(existingMessage);
+function copyPngToClipboard() {
+	const svgElement = document.querySelector('#svg-container svg');
+	if (!svgElement) {
+		showMessage('No SVG found to convert', true);
+		return;
+	}
+	
+	const serializer = new XMLSerializer();
+	const svgString = serializer.serializeToString(svgElement);
+	const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+	const svgUrl = URL.createObjectURL(svgBlob);
+	
+	const img = new Image();
+	img.onload = function() {
+		const canvas = document.createElement('canvas');
+		canvas.width = svgElement.width.baseVal.value;
+		canvas.height = svgElement.height.baseVal.value;
+		
+		const ctx = canvas.getContext('2d');
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(img, 0, 0);
+		
+		canvas.toBlob(function(blob) {
+			try {
+				const item = new ClipboardItem({ 'image/png': blob });
+				navigator.clipboard.write([item]).then(
+					function() {
+						showMessage('PNG copied to clipboard!');
+					},
+					function(err) {
+						console.error('Could not copy image: ', err);
+						showMessage('Failed to copy PNG. Browser may not support clipboard images.', true);
+					}
+				);
+			} catch (err) {
+				console.error('Clipboard API error: ', err);
+				showMessage('Your browser does not support copying images to clipboard.', true);
 			}
-			
-			successMessage.className = 'copy-success';
-			buttonContainer.appendChild(successMessage);
-			
-			setTimeout(() => {
-				if (successMessage.parentNode) {
-					successMessage.parentNode.removeChild(successMessage);
-				}
-			}, 3000);
-		})
-		.catch(err => {
-			console.error('Failed to copy SVG: ', err);
-			
-			const errorElement = document.getElementById('error-message');
-			const originalError = errorElement.textContent;
-			errorElement.textContent = 'Failed to copy SVG to clipboard. Your browser may not support this feature.';
-			
-			setTimeout(() => {
-				errorElement.textContent = originalError;
-			}, 3000);
-		});
+		}, 'image/png');
+	};
+	
+	img.onerror = function() {
+		showMessage('Error converting SVG to PNG', true);
+		URL.revokeObjectURL(svgUrl);
+	};
+	
+	img.src = svgUrl;
+}
+
+function showMessage(message, isError = false) {
+	if (isError) {
+		const errorElement = document.getElementById('error-message');
+		const originalError = errorElement.textContent;
+		errorElement.textContent = message;
+		errorElement.style.color = 'red';
+		
+		setTimeout(() => {
+			errorElement.textContent = originalError;
+		}, 3000);
+	} else {
+		const buttonContainer = document.getElementById('svg-button-container');
+		
+		const existingMessage = buttonContainer.querySelector('.copy-success');
+		if (existingMessage) {
+			buttonContainer.removeChild(existingMessage);
+		}
+		
+		const successMessage = document.createElement('div');
+		successMessage.textContent = message;
+		successMessage.style.color = '#4CAF50';
+		successMessage.style.marginTop = '5px';
+		successMessage.style.textAlign = 'center';
+		successMessage.className = 'copy-success';
+		
+		buttonContainer.appendChild(successMessage);
+		
+		setTimeout(() => {
+			if (successMessage.parentNode) {
+				successMessage.parentNode.removeChild(successMessage);
+			}
+		}, 3000);
+	}
 }
 
 document.getElementById('generate-btn').addEventListener('click', generateBST);
